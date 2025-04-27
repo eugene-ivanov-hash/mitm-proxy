@@ -45,8 +45,6 @@ func main() {
 		slog.Debug("Error parsing environment variables", slog.String("err", err.Error()))
 	}
 
-	_ = envs
-
 	requestRules, responseRules, err := rule.CompileRules(*rulesDir, envs)
 	if err != nil {
 		slog.Error("Error compiling rules", slog.String("err", err.Error()))
