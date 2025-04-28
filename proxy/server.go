@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
-	buf2 "github.com/eugene-ivanov-hash/mitm-proxy/buf"
+	"github.com/eugene-ivanov-hash/mitm-proxy/buf"
 	"github.com/eugene-ivanov-hash/mitm-proxy/rule"
 )
 
@@ -45,7 +45,7 @@ func NewProxySslServer(rootCa, rootKey string, requestRules []*rule.Rule, respon
 func (p Server) HandleTLS(conn net.Conn) {
 	br := bufio.NewReader(conn)
 
-	bc := buf2.NewBufferedConn(conn, br)
+	bc := buf.NewBufferedConn(conn, br)
 	defer bc.Close()
 
 	peek, err := br.Peek(7)
@@ -198,9 +198,9 @@ func (p Server) handle(clientConn net.Conn, isSsl bool) {
 
 			errChan := make(chan error, 2)
 			copyConn := func(a, b net.Conn) {
-				buf := buf2.ByteGet(BufSize)
-				defer buf2.BytePut(buf)
-				_, err := io.CopyBuffer(a, b, buf)
+				buffer := buf.ByteGet(BufSize)
+				defer buf.BytePut(buffer)
+				_, err := io.CopyBuffer(a, b, buffer)
 				errChan <- err
 			}
 
