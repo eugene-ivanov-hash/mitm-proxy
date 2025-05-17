@@ -52,7 +52,7 @@ jobs:
           
           # Create and push the tag
           git tag $new_version
-          git push origin $new_version
+          git push origin tag $new_version
           
           # Create release using the new tag
           gh release create $new_version \
