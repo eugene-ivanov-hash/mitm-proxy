@@ -49,12 +49,16 @@ jobs:
               fi
             fi
           done
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
       - name: Publish Binaries
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: Release ${{ github.ref }}
-          tag: ${{ github.ref }}
+          release_name: Release ${{ steps.tag.outputs.TAG_NAME }}
+          tag: ${{ steps.tag.outputs.TAG_NAME }}
           file: dist/*
           file_glob: true
           overwrite: true
