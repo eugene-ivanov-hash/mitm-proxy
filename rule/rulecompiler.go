@@ -118,6 +118,8 @@ func compileRule(celEnv *cel.Env, rule *Rule, envs map[string]string) error {
 		return err
 	}
 
+	slog.Debug("Compiling rule", slog.String("rule name", rule.Name), slog.String("rule", src.String()))
+
 	ast, issues := celEnv.Compile(src.String())
 	if issues.Err() != nil {
 		return issues.Err()
@@ -182,6 +184,8 @@ func compileScripts(index int, i *interp.Interpreter, rule *Rule, envs map[strin
 	if err != nil {
 		return err
 	}
+
+	slog.Debug("Compiling script", slog.String("rule name", rule.Name), slog.String("script", src.String()))
 
 	_, err = i.Eval(src.String())
 	if err != nil {
