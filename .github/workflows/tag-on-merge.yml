@@ -1,0 +1,47 @@
+name: Tag on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: echo "LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")" >> $GITHUB_OUTPUT
+
+      - name: Get current commit
+        id: get_current_commit
+        run: echo "CURRENT_COMMIT=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Create tag and release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest tag version
+          latest_tag=${{ steps.get_latest_tag.outputs.LATEST_TAG }}
+          
+          # Extract version numbers
+          IFS='.' read -r major minor patch <<< "${latest_tag#v}"
+          
+          # Increment the patch version
+          ((patch++))
+          
+          # Create new version string
+          new_version="v${major}.${minor}.${patch}"
+          
+          # Create and push the tag
+          git tag $new_version
+          git push origin $new_version
+          
+          # Create release using the new tag
+          gh release create $new_version \
+            --title "Release $new_version" \
+            --notes "Automated release from PR #${{ github.event.pull_request.number }}"
