@@ -1,0 +1,26 @@
+# Change CORS and CSP
+enabled: false
+rules:
+  - name: "Change CORS and CSP"
+    change: "response"
+    enabled: true
+    rule: "true"
+    action: "script"
+    import: |
+      "strings"
+      "log/slog"
+    script: |
+      resp.Header.Set("X-Request-Modified", "MITM-Proxy")
+      if origin := req.Header.Get("Origin"); origin != "" {
+          resp.Header.Set("Access-Control-Allow-Origin", origin)
+          resp.Header.Set("Access-Control-Allow-Credentials", "true")
+      }
+
+      if csp := resp.Header.Get("Content-Security-Policy"); csp != "" {
+          cspParts := strings.Split(csp, ";")
+          for i, part := range cspParts {
+              part = strings.TrimSpace(part)
+              cspParts[i] = part + " *"
+          }
+          resp.Header.Set("Content-Security-Policy", strings.Join(cspParts, "; "))
+      }

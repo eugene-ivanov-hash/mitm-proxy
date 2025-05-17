@@ -1,0 +1,17 @@
+# Adding domain to cookies
+enabled: true
+rules:
+  - name: "Cookie domain"
+    change: "response"
+    enabled: true
+    rule: |
+      req.URL.Path.startsWith("/some-api") && "Set-Cookie" in resp.Header && resp.Header["Set-Cookie"].size() != 0
+    action: "script"
+    import: |
+      "strings"
+    script: |
+      setCookie := resp.Header.Values("Set-Cookie")
+      resp.Header.Del("Set-Cookie")
+      for _, cookie := range setCookie {
+          resp.Header.Add("Set-Cookie", strings.Replace(cookie, ";", "; Domain=.example.com ;", 1))
+      }
