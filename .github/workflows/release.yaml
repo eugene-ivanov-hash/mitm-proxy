@@ -12,14 +12,41 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Generate build files
-        uses: eugene-ivanov-hash/go-cross-build@v1.0.3
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          platforms: 'linux/amd64, linux/ppc64le, darwin/amd64, darwin/arm64, windows/amd64'
-          package: 'main'
-          name: 'front-mitm-proxy'
-          compress: 'true'
-          dest: 'dist'
+          go-version: '1.21'
+          check-latest: true
+
+      - name: Generate build files
+        run: |
+          mkdir -p dist
+          
+          # Build for Linux (amd64)
+          GOOS=linux GOARCH=amd64 go build -o dist/mitm-proxy-linux-amd64 .
+          
+          # Build for macOS (amd64)
+          GOOS=darwin GOARCH=amd64 go build -o dist/mitm-proxy-darwin-amd64 .
+          
+          # Build for macOS (arm64)
+          GOOS=darwin GOARCH=arm64 go build -o dist/mitm-proxy-darwin-arm64 .
+          
+          # Build for Windows (amd64)
+          GOOS=windows GOARCH=amd64 go build -o dist/mitm-proxy-windows-amd64.exe .
+          
+          # Compress the binaries
+          cd dist
+          for file in *; do
+            if [[ -f "$file" && ! "$file" == *.zip && ! "$file" == *.tar.gz ]]; then
+              if [[ "$file" == *.exe ]]; then
+                zip "${file%.exe}.zip" "$file"
+                rm "$file"
+              else
+                tar -czf "$file.tar.gz" "$file"
+                rm "$file"
+              fi
+            fi
+          done
       - name: Publish Binaries
         uses: svenstaro/upload-release-action@v2
         with:
