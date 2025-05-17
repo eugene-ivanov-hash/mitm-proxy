@@ -33,6 +33,10 @@ func CompileRules(rulesDir string, envs map[string]string) ([]*Rule, []*Rule, er
 	requestRules := make([]*Rule, 0)
 	responseRules := make([]*Rule, 0)
 
+	if _, err := os.Stat(rulesDir); os.IsNotExist(err) {
+		return requestRules, responseRules, nil
+	}
+
 	index := 1
 	err = filepath.Walk(rulesDir, func(path string, f os.FileInfo, err error) error {
 		e := func(err error) error {

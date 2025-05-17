@@ -1,0 +1,64 @@
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Upload Release Assets
+
+jobs:
+  build:
+    name: Upload Release Assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+          check-latest: true
+
+      - name: Generate build files
+        run: |
+          mkdir -p dist
+          
+          # Build for Linux (amd64)
+          GOOS=linux GOARCH=amd64 go build -o dist/mitm-proxy-linux-amd64 .
+          
+          # Build for macOS (amd64)
+          GOOS=darwin GOARCH=amd64 go build -o dist/mitm-proxy-darwin-amd64 .
+          
+          # Build for macOS (arm64)
+          GOOS=darwin GOARCH=arm64 go build -o dist/mitm-proxy-darwin-arm64 .
+          
+          # Build for Windows (amd64)
+          GOOS=windows GOARCH=amd64 go build -o dist/mitm-proxy-windows-amd64.exe .
+          
+          # Compress the binaries
+          cd dist
+          for file in *; do
+            if [[ -f "$file" && ! "$file" == *.zip && ! "$file" == *.tar.gz ]]; then
+              if [[ "$file" == *.exe ]]; then
+                zip "${file%.exe}.zip" "$file"
+                rm "$file"
+              else
+                tar -czf "$file.tar.gz" "$file"
+                rm "$file"
+              fi
+            fi
+          done
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Publish Binaries
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: Release ${{ steps.tag.outputs.TAG_NAME }}
+          tag: ${{ steps.tag.outputs.TAG_NAME }}
+          file: dist/*
+          file_glob: true
+          overwrite: true
