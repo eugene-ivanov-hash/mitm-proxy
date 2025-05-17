@@ -9,9 +9,13 @@ jobs:
   tag-release:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get latest tag
         id: get_latest_tag
@@ -21,21 +25,30 @@ jobs:
         id: get_current_commit
         run: echo "CURRENT_COMMIT=${{ github.sha }}" >> $GITHUB_OUTPUT
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
       - name: Create tag and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the latest tag version
           latest_tag=${{ steps.get_latest_tag.outputs.LATEST_TAG }}
+          echo "Latest tag: $latest_tag"
           
           # Extract version numbers
           IFS='.' read -r major minor patch <<< "${latest_tag#v}"
+          echo "Current version: $major.$minor.$patch"
           
           # Increment the patch version
           ((patch++))
+          echo "New patch version: $patch"
           
           # Create new version string
           new_version="v${major}.${minor}.${patch}"
+          echo "New version: $new_version"
           
           # Create and push the tag
           git tag $new_version
