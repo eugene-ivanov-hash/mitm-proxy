@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Go 1.18 or higher (only if building from source)
+- Go 1.24 or higher (only if building from source)
 - OpenSSL (for generating CA certificates using Option 1)
 - mkcert (for generating CA certificates using Option 2)
 
@@ -141,6 +141,8 @@ For the proxy to work with HTTPS connections, you need to add the generated CA c
    sudo cp ca.crt /usr/local/share/ca-certificates/
    sudo update-ca-certificates
    ```
+
+   Note: If you used mkcert, this step is already done for you by the `mkcert -install` command.
 
 #### For Firefox:
 
