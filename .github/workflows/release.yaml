@@ -22,7 +22,7 @@ jobs:
 
       - name: Generate build files
         run: |
-          mkdir -p dist
+          mkdir -p dist 
           
           # Build for Linux (amd64)
           GOOS=linux GOARCH=amd64 go build -o dist/mitm-proxy-linux-amd64 .
